@@ -10,6 +10,8 @@ import (
     "os"
 )
 
+Create audience
+
 // Define the structure for the data expected from Postman
 type MailchimpMember struct {
     EmailAddress string `json:"email_address"`
