@@ -12,6 +12,7 @@ type CampaignSettings struct {
 	Title       string `json:"title"`
 	FromName    string `json:"from_name"`
 	ReplyTo     string `json:"reply_to"`
+	TemplateId	int `json:"template_id"`
 }
 
 type CampaignRecipients struct {

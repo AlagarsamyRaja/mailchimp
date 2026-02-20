@@ -104,7 +104,7 @@ func DeleteCampaign(campaignid string) error {
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix,campaignid)
 
 	req, _ := http.NewRequest("DELETE", url, nil)
-	
+
 	req.Header.Set("Authorization", "Bearer "+apiKey)
     req.Header.Set("Content-Type", "application/json")
 
@@ -114,5 +114,33 @@ func DeleteCampaign(campaignid string) error {
 	}
 	defer resp.Body.Close()
 
+	return nil
+}
+
+func SendCampaign(campaignid string) error {
+	apiKey, serverPrefix, err := config.LoadEnv()
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s/actions/send", serverPrefix,campaignid)
+
+	httpReq, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.SetBasicAuth("anystring", apiKey)
+
+	resp, err := http.DefaultClient.Do(httpReq)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent{
+		return fmt.Errorf("failed to send campaign %v",err)
+	}
 	return nil
 }
