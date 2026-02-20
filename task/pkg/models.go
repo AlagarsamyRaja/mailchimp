@@ -3,7 +3,8 @@ package pkg
 type MailchimpConfig struct {
 	ApiKey       string
 	ServerPrefix string
-	ListID       string
+	CampaignId   string
+	//ListID       string
 }
 
 type CampaignSettings struct {
@@ -18,7 +19,7 @@ type CampaignRecipients struct {
 }
 
 type CampaignCreateRequest struct {
-	Type       string             `json:"type"` // e.g. "regular"
+	Type       string             `json:"type"`
 	Recipients CampaignRecipients `json:"recipients"`
 	Settings   CampaignSettings   `json:"settings"`
 }

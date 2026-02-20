@@ -1,0 +1,95 @@
+package service
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"mailchimp/config"
+	"mailchimp/pkg"
+	"net/http"
+)
+
+func CreateCampaignService(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse, error) {
+	apiKey, serverPrefix,_, err := config.LoadEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns", serverPrefix)
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.SetBasicAuth("anystring", apiKey)
+
+	resp, err := http.DefaultClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return nil, err
+	}
+
+	fmt.Println("Response Status:", resp.Status)
+	fmt.Println("Response Body:", string(body))
+
+	var campaignResp pkg.CampaignResponse
+	json.NewDecoder(resp.Body).Decode(&campaignResp)
+
+	fmt.Println("Response Status:", resp.Status)
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to create campaign, status: %s", resp.Status)
+	}
+
+	return &campaignResp, nil
+}
+
+func GetCampaigns() ([]byte, error) {
+
+	apiKey, serverPrefix, _, err := config.LoadEnv()
+
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns", serverPrefix)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.SetBasicAuth("anystring", apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}
+
+func GetCampaignsById() ([]byte, error) {
+
+	apiKey, serverPrefix, CampaignId, err := config.LoadEnv()
+
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix,CampaignId)
+
+	req, _ := http.NewRequest("GET", url, nil)
+	req.SetBasicAuth("anystring", apiKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}

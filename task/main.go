@@ -105,14 +105,15 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"mailchimp/handler"
+	"mailchimp/api/handlers"
+
 	"net/http"
 )
 
 func main() {
-	http.HandleFunc("/create-campaign", handler.CreateCampaignHandler)
-
+	http.HandleFunc("/createcampaign", handlers.CreateCampaignHandler)
+	http.HandleFunc("/getcampaign", handlers.GetCampaign)
+	http.HandleFunc("/getcampaignbyid", handlers.GetCampaignById)
 	fmt.Println("Server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	http.ListenAndServe(":8080", nil)
 }

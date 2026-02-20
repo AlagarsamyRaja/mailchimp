@@ -2,23 +2,25 @@ package config
 
 import (
 	"fmt"
+	"mailchimp/pkg"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
-func LoadEnv() (string, string, error) {
+func LoadEnv() (string, string, string, error) {
+	var datas pkg.MailchimpConfig
 	err := godotenv.Load()
 	if err != nil {
-		return "", "", fmt.Errorf("error loading .env file: %v", err)
+		return "", "", "", fmt.Errorf("error loading .env file: %v", err)
 	}
 
-	apiKey := os.Getenv("MAILCHIMP_API_KEY")
-	serverPrefix := os.Getenv("MAILCHIMP_SERVER_PREFIX")
+	datas.ApiKey = os.Getenv("MAILCHIMP_API_KEY")
+	datas.ServerPrefix = os.Getenv("MAILCHIMP_SERVER")
 
-	if apiKey == "" || serverPrefix == "" {
-		return "", "", fmt.Errorf("missing required environment variables")
-	}
+	// if datas.ApiKeyapiKey == "" || serverPrefix == "" {
+	// 	return "", "", fmt.Errorf("missing required environment variables")
+	// }
 
-	return apiKey, serverPrefix, nil
+	return datas.ApiKey, datas.ServerPrefix, datas.CampaignId, nil
 }
