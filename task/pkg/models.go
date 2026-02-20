@@ -3,7 +3,7 @@ package pkg
 type MailchimpConfig struct {
 	ApiKey       string
 	ServerPrefix string
-	CampaignId   string
+	//CampaignId   string
 	//ListID       string
 }
 
@@ -28,4 +28,8 @@ type CampaignResponse struct {
 	ID     string `json:"id"`
 	Type   string `json:"type"`
 	Status string `json:"status"`
+}
+
+type Response struct {
+	Message string `json:"message"`
 }

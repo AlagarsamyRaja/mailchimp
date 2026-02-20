@@ -8,10 +8,11 @@ import (
 	"mailchimp/config"
 	"mailchimp/pkg"
 	"net/http"
+
 )
 
 func CreateCampaignService(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse, error) {
-	apiKey, serverPrefix,_, err := config.LoadEnv()
+	apiKey, serverPrefix, err := config.LoadEnv()
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +48,11 @@ func CreateCampaignService(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse
 	fmt.Println("Response Body:", string(body))
 
 	var campaignResp pkg.CampaignResponse
-	json.NewDecoder(resp.Body).Decode(&campaignResp)
 
-	fmt.Println("Response Status:", resp.Status)
+	err=json.Unmarshal(body,&campaignResp)
+	if err!=nil{
+		return nil,err
+	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("failed to create campaign, status: %s", resp.Status)
@@ -60,7 +63,7 @@ func CreateCampaignService(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse
 
 func GetCampaigns() ([]byte, error) {
 
-	apiKey, serverPrefix, _, err := config.LoadEnv()
+	apiKey, serverPrefix, err := config.LoadEnv()
 
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns", serverPrefix)
 
@@ -76,11 +79,11 @@ func GetCampaigns() ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func GetCampaignsById() ([]byte, error) {
+func GetCampaignsById(campaignid string) ([]byte, error) {
 
-	apiKey, serverPrefix, CampaignId, err := config.LoadEnv()
+	apiKey, serverPrefix, err := config.LoadEnv()
 
-	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix,CampaignId)
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix,campaignid)
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.SetBasicAuth("anystring", apiKey)
@@ -92,4 +95,24 @@ func GetCampaignsById() ([]byte, error) {
 	defer resp.Body.Close()
 
 	return io.ReadAll(resp.Body)
+}
+
+func DeleteCampaign(campaignid string) error {
+
+	apiKey, serverPrefix, err := config.LoadEnv()
+
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix,campaignid)
+
+	req, _ := http.NewRequest("DELETE", url, nil)
+	
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+    req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }

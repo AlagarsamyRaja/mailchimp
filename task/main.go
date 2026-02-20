@@ -113,7 +113,8 @@ import (
 func main() {
 	http.HandleFunc("/createcampaign", handlers.CreateCampaignHandler)
 	http.HandleFunc("/getcampaign", handlers.GetCampaign)
-	http.HandleFunc("/getcampaignbyid", handlers.GetCampaignById)
+	http.HandleFunc("/getcampaignbyid/{id}", handlers.GetCampaignById)
+	http.HandleFunc("/deletecampaignbyid/{id}",handlers.DeleteCampaignHandler)
 	fmt.Println("Server running on port 8080")
 	http.ListenAndServe(":8080", nil)
 }
