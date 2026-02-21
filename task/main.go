@@ -16,6 +16,16 @@ func main() {
 	r.HandleFunc("/getcampaignbyid/{id}", handlers.GetCampaignById).Methods("GET")
 	r.HandleFunc("/updatecampaign/{id}", handlers.UpdateCampaignHandler).Methods("PATCH")
 	r.HandleFunc("/deletecampaignbyid/{id}", handlers.DeleteCampaignHandler).Methods("DELETE")
+	r.HandleFunc("/sendcampaign/{id}",handlers.SendCampaign).Methods("POST")
+
+	r.HandleFunc("/createaudience", handlers.CreateAudienceHandler).Methods("POST")
+	r.HandleFunc("/getaudience", handlers.GetAudiencesHandler).Methods("GET")
+	r.HandleFunc("/getaudiencebyid/{id}", handlers.GetAudienceByIdHandler).Methods("GET")
+	r.HandleFunc("/updateaudience/{id}", handlers.UpdateAudienceHandler).Methods("PATCH")
+	r.HandleFunc("/deleteaudiencebyid/{id}", handlers.DeleteAudienceHandler).Methods("DELETE")
+
+	r.HandleFunc("/createmember/{id}",handlers.CreateMemberHandler).Methods("POST")
+	r.HandleFunc("/getmember/{id}",handlers.GetMembersHandler).Methods("GET")
 
 	fmt.Println("Server running on port 8080")
 	http.ListenAndServe(":8080", r)

@@ -1,10 +1,10 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mailchimp/common"
 	"mailchimp/config"
 	"mailchimp/pkg"
 	"net/http"
@@ -23,39 +23,12 @@ func CreateCampaignService(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse
 		return nil, err
 	}
 
-	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	create, err := common.PostCampaign(url, jsonData, apiKey)
 	if err != nil {
 		return nil, err
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println("Response Status:", resp.Status)
-	fmt.Println("Response Body:", string(body))
-
-	var campaignResp pkg.CampaignResponse
-	err = json.Unmarshal(body, &campaignResp)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("Mailchimp error: %s\nResponse: %s", resp.Status, string(body))
-	}
-
-	return &campaignResp, nil
+	return create, nil
 }
 
 func GetCampaigns() ([]byte, error) {
@@ -64,16 +37,12 @@ func GetCampaigns() ([]byte, error) {
 
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns", serverPrefix)
 
-	req, _ := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
+	get, err := common.Get(url, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	return get, nil
 
-	return io.ReadAll(resp.Body)
 }
 
 func GetCampaignsById(campaignid string) ([]byte, error) {
@@ -82,16 +51,12 @@ func GetCampaignsById(campaignid string) ([]byte, error) {
 
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix, campaignid)
 
-	req, _ := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
+	get, err := common.GetById(url, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	return io.ReadAll(resp.Body)
+	return get, nil
 }
 
 func UpdateCampaignService(campaignID string, req pkg.CampaignCreateRequest) ([]byte, error) {
@@ -107,30 +72,12 @@ func UpdateCampaignService(campaignID string, req pkg.CampaignCreateRequest) ([]
 		return nil, err
 	}
 
-	httpReq, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
+	update, err := common.UpdateById(url, jsonData, apiKey)
 	if err != nil {
 		return nil, err
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Mailchimp error: %s\nResponse: %s", resp.Status, string(body))
-	}
-
-	return body, nil
+	return update, nil
 }
 
 func DeleteCampaignById(campaignID string) error {
@@ -141,11 +88,55 @@ func DeleteCampaignById(campaignID string) error {
 
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s", serverPrefix, campaignID)
 
-	req, err := http.NewRequest("DELETE", url, nil)
+	err = common.DeleteById(url, apiKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// func SendCampaign(campaignid string) error {
+// 	apiKey, serverPrefix, err := config.LoadEnv()
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s/actions/send", serverPrefix, campaignid)
+
+// 	httpReq, err := http.NewRequest("POST", url, nil)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	httpReq.Header.Set("Content-Type", "application/json")
+// 	httpReq.SetBasicAuth("anystring", apiKey)
+
+// 	resp, err := http.DefaultClient.Do(httpReq)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer resp.Body.Close()
+
+// 	if resp.StatusCode != http.StatusNoContent {
+// 		return fmt.Errorf("failed to send campaign %v", err)
+// 	}
+// 	return nil
+// }
+
+func SendCampaign(campaignID string) error {
+	apiKey, serverPrefix, err := config.LoadEnv()
 	if err != nil {
 		return err
 	}
 
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s/actions/send", serverPrefix, campaignID)
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth("anystring", apiKey)
 
 	resp, err := http.DefaultClient.Do(req)
@@ -154,42 +145,16 @@ func DeleteCampaignById(campaignID string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusNoContent { // 204 = Success (no content)
-		return fmt.Errorf("failed to delete campaign, status: %s", resp.Status)
-	}
-
-	return nil
-}
-
-func SendCampaign(campaignid string) error {
-	apiKey, serverPrefix, err := config.LoadEnv()
-	if err != nil {
-		return err
-	}
-
-	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns/%s/actions/send", serverPrefix, campaignid)
-
-	httpReq, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		return err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("failed to send campaign %v", err)
+		return fmt.Errorf("failed to send campaign: status %d, body: %s", resp.StatusCode, string(body))
 	}
+
 	return nil
 }
 
-// ✅ Create Audience
+//  Create Audience
 func CreateAudienceService(req pkg.AudienceRequest) ([]byte, error) {
 	apiKey, serverPrefix, err := config.LoadEnv()
 	if err != nil {
@@ -199,95 +164,100 @@ func CreateAudienceService(req pkg.AudienceRequest) ([]byte, error) {
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists", serverPrefix)
 	data, _ := json.Marshal(req)
 
-	httpReq, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
-	httpReq.SetBasicAuth("anystring", apiKey)
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return nil, err
+	create,err:=common.Post(url,data,apiKey)
+	if err!=nil{
+		return nil,err
 	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("Mailchimp error: %s\nResponse: %s", resp.Status, string(body))
-	}
-	return body, nil
+	return create,nil
 }
 
-// ✅ Get All Audiences
+//  Get All Audiences
 func GetAudiencesService() ([]byte, error) {
 	apiKey, serverPrefix, _ := config.LoadEnv()
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists", serverPrefix)
 
-	req, _ := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
+	get, err := common.Get(url, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+	return get, nil
 }
 
-// ✅ Get Audience by ID
+//  Get Audience by ID
 func GetAudienceByIdService(listID string) ([]byte, error) {
 	apiKey, serverPrefix, _ := config.LoadEnv()
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists/%s", serverPrefix, listID)
 
-	req, _ := http.NewRequest("GET", url, nil)
-	req.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
+	get, err := common.GetById(url, apiKey)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+
+	return get, nil
 }
 
-// ✅ Update Audience
+//   Update Audience
 func UpdateAudienceService(listID string, req pkg.AudienceRequest) ([]byte, error) {
 	apiKey, serverPrefix, _ := config.LoadEnv()
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists/%s", serverPrefix, listID)
 
-	data, _ := json.Marshal(req)
-	httpReq, _ := http.NewRequest("PATCH", url, bytes.NewBuffer(data))
-	httpReq.SetBasicAuth("anystring", apiKey)
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(httpReq)
+	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Mailchimp error: %s\nResponse: %s", resp.Status, string(body))
+	update, err := common.UpdateById(url, data, apiKey)
+	if err != nil {
+		return nil, err
 	}
-	return body, nil
+
+	return update, nil
 }
 
-// ✅ Delete Audience
+//  Delete Audience
 func DeleteAudienceService(listID string) error {
-	apiKey, serverPrefix, _ := config.LoadEnv()
-	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists/%s", serverPrefix, listID)
-
-	req, _ := http.NewRequest("DELETE", url, nil)
-	req.SetBasicAuth("anystring", apiKey)
-
-	resp, err := http.DefaultClient.Do(req)
+	apiKey, serverPrefix, err := config.LoadEnv()
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists/%s", serverPrefix, listID)
 
-	if resp.StatusCode != http.StatusNoContent {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("failed to delete audience, status: %s, response: %s", resp.Status, string(body))
+	err = common.DeleteById(url, apiKey)
+	if err != nil {
+		return err
 	}
 	return nil
+}
+
+// Create Member
+func CreateMemberService(listID string, req pkg.MemberRequest) ([]byte, error) {
+	apiKey, serverPrefix, err := config.LoadEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists/%s/members", serverPrefix, listID)
+	data, _ := json.Marshal(req)
+
+	create,err:=common.Post(url,data,apiKey)
+	if err!=nil{
+		return nil,err
+	}
+
+	return create,nil
+}
+
+//Get All Members
+func GetMembersService(listID string) ([]byte, error) {
+	apiKey, serverPrefix, err := config.LoadEnv()
+	if err!=nil{
+		return nil,err
+	}
+	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/lists/%s/members", serverPrefix, listID)
+
+	get,err := common.Get(url,apiKey)
+	if err!=nil{
+		return nil,err
+	}
+	return get,nil
 }

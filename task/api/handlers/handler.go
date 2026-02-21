@@ -120,13 +120,13 @@ func SendCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	campaignID := r.URL.Query().Get("id")
-	if campaignID == "" {
-		http.Error(w, "Campaign ID required", http.StatusBadRequest)
+	id := mux.Vars(r)["id"]
+	if id == "" {
+		http.Error(w, "Missing audience ID", http.StatusBadRequest)
 		return
 	}
 
-	err := service.SendCampaign(campaignID)
+	err := service.SendCampaign(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -136,7 +136,7 @@ func SendCampaign(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Campaign sent successfully"))
 }
 
-// //audience
+//audience
 func CreateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -156,7 +156,7 @@ func CreateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// ✅ Get All Audiences
+// Get All Audiences
 func GetAudiencesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -168,7 +168,7 @@ func GetAudiencesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// ✅ Get Audience by ID
+//Get Audience by ID
 func GetAudienceByIdHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -187,7 +187,7 @@ func GetAudienceByIdHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// ✅ Update Audience
+//Update Audience
 func UpdateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -213,7 +213,7 @@ func UpdateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// ✅ Delete Audience
+//Delete Audience
 func DeleteAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -231,3 +231,48 @@ func DeleteAudienceHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(pkg.Response{Message: "Audience deleted successfully"})
 }
+
+//Create Member
+func CreateMemberHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	listID := mux.Vars(r)["id"]
+	if listID == "" {
+		http.Error(w, "Missing list id", http.StatusBadRequest)
+		return
+	}
+
+	var req pkg.MemberRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	data, err := service.CreateMemberService(listID, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
+}
+
+//Get All Members of a List
+func GetMembersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	listID := mux.Vars(r)["id"]
+	if listID == "" {
+		http.Error(w, "Missing list id", http.StatusBadRequest)
+		return
+	}
+
+	data, err := service.GetMembersService(listID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(data)
+}
+
