@@ -18,9 +18,9 @@ func LoadEnv() (string, string, error) {
 	datas.ApiKey = os.Getenv("MAILCHIMP_API_KEY")
 	datas.ServerPrefix = os.Getenv("MAILCHIMP_SERVER")
 
-	// if datas.ApiKeyapiKey == "" || serverPrefix == "" {
-	// 	return "", "", fmt.Errorf("missing required environment variables")
-	// }
+	if datas.ApiKey == "" || datas.ServerPrefix == "" {
+		return "", "", fmt.Errorf("missing required environment variables")
+	}
 
 	return datas.ApiKey, datas.ServerPrefix, nil
 }
