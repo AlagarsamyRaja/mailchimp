@@ -144,23 +144,27 @@ func DeleteCampaignHandler(w http.ResponseWriter, r *http.Request) {
 // }
 
 // Create campaign handler
-func CreateCampaignHandler(w http.ResponseWriter, r *http.Request) {
+func CreateCampaigns(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST method allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var req pkg.CampaignCreateRequest
-	_ = json.NewDecoder(r.Body).Decode(&req)
+	var campaignReq pkg.CampaignCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&campaignReq); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
 
-	response, err := service.CreateCampaign(req)
+	response, err := service.CreateCampaignServices(campaignReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	// Directly send raw JSON response
+	w.Write(response)
 }
 
 // Send campaign handler new

@@ -11,7 +11,7 @@ import (
 func main() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/createcampaign", handlers.CreateCampaignn).Methods("POST")
+	r.HandleFunc("/createcampaign", handlers.CreateCampaigns).Methods("POST")
 	r.HandleFunc("/getcampaign", handlers.GetCampaign).Methods("GET")
 	r.HandleFunc("/getcampaignbyid/{id}", handlers.GetCampaignById).Methods("GET")
 	r.HandleFunc("/updatecampaign/{id}", handlers.UpdateCampaignHandler).Methods("PATCH")

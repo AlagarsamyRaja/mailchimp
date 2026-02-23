@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -165,35 +164,60 @@ func DeleteCampaignById(campaignID string) error {
 // }
 
 // Create a campaign using pre-made template
-func CreateCampaign(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse, error) {
+func CreateCampaignServices(req pkg.CampaignCreateRequest) ([]byte, error) {
 	apiKey, serverPrefix, err := config.LoadEnv()
 	if err != nil {
 		return nil, err
 	}
 
 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns", serverPrefix)
-	jsonData, _ := json.Marshal(req)
 
-	httpReq, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.SetBasicAuth("anystring", apiKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(httpReq)
+	jsonData, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("Mailchimp create campaign error: %s\n%s", resp.Status, string(body))
+	// Using Post function to get raw JSON
+	body, err := common.Post(url, jsonData, apiKey)
+	if err != nil {
+		return nil, err
 	}
 
-	var campaignResp pkg.CampaignResponse
-	_ = json.Unmarshal(body, &campaignResp)
-	return &campaignResp, nil
+	// Print raw response
+	fmt.Println("Mailchimp Response:", string(body))
+
+	return body, nil
 }
+
+// func CreateCampaign(req pkg.CampaignCreateRequest) (*pkg.CampaignResponse, error) {
+// 	apiKey, serverPrefix, err := config.LoadEnv()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	url := fmt.Sprintf("https://%s.api.mailchimp.com/3.0/campaigns", serverPrefix)
+// 	jsonData, _ := json.Marshal(req)
+
+// 	httpReq, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+// 	httpReq.Header.Set("Content-Type", "application/json")
+// 	httpReq.SetBasicAuth("anystring", apiKey)
+
+// 	client := &http.Client{}
+// 	resp, err := client.Do(httpReq)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer resp.Body.Close()
+
+// 	body, _ := io.ReadAll(resp.Body)
+// 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+// 		return nil, fmt.Errorf("Mailchimp create campaign error: %s\n%s", resp.Status, string(body))
+// 	}
+
+// 	var campaignResp pkg.CampaignResponse
+// 	_ = json.Unmarshal(body, &campaignResp)
+// 	return &campaignResp, nil
+// }
 
 // Send campaign by ID new
 func SendCampaignService(campaignID string) error {
