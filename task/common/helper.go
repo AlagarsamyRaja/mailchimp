@@ -2,6 +2,8 @@ package common
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +11,7 @@ import (
 	"net/http"
 )
 
-func PostCampaign(url string, jsonData []byte,apikey string) (*pkg.CampaignResponse, error){
+func PostCampaign(url string, jsonData []byte, apikey string) (*pkg.CampaignResponse, error) {
 	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
@@ -45,8 +47,7 @@ func PostCampaign(url string, jsonData []byte,apikey string) (*pkg.CampaignRespo
 	return &campaignResp, nil
 }
 
-
-func Post(url string,data []byte,apikey string)([]byte, error){
+func Post(url string, data []byte, apikey string) ([]byte, error) {
 	httpReq, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	httpReq.SetBasicAuth("anystring", apikey)
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -64,7 +65,7 @@ func Post(url string,data []byte,apikey string)([]byte, error){
 	return body, nil
 }
 
-func Get(url string,apikey string) ([]byte, error) {
+func Get(url string, apikey string) ([]byte, error) {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.SetBasicAuth("anystring", apikey)
 
@@ -76,7 +77,7 @@ func Get(url string,apikey string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func GetById(url string,apikey string)([]byte, error){
+func GetById(url string, apikey string) ([]byte, error) {
 	req, _ := http.NewRequest("GET", url, nil)
 	req.SetBasicAuth("anystring", apikey)
 
@@ -88,7 +89,7 @@ func GetById(url string,apikey string)([]byte, error){
 	return io.ReadAll(resp.Body)
 }
 
-func UpdateById(url string,jsonData []byte,apikey string)([]byte, error) {
+func UpdateById(url string, jsonData []byte, apikey string) ([]byte, error) {
 
 	httpReq, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -114,10 +115,9 @@ func UpdateById(url string,jsonData []byte,apikey string)([]byte, error) {
 	}
 
 	return body, nil
-} 
+}
 
-
-func DeleteById(url string,apikey string) error{
+func DeleteById(url string, apikey string) error {
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return err
@@ -131,9 +131,14 @@ func DeleteById(url string,apikey string) error{
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusNoContent { 
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("failed to delete campaign, status: %s", resp.Status)
 	}
 
 	return nil
+}
+
+func ComputeSubscriberHash(email string) string {
+	hash := md5.Sum([]byte(email))
+	return hex.EncodeToString(hash[:])
 }

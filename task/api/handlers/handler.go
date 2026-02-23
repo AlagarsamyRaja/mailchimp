@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func CreateCampaignHandler(w http.ResponseWriter, r *http.Request) {
+func CreateCampaignn(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST method allowed", http.StatusMethodNotAllowed)
 		return
@@ -114,6 +114,78 @@ func DeleteCampaignHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+//func SetTemplateHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+
+// 	vars := mux.Vars(r)
+// 	campaignID := vars["id"]
+
+// 	var req struct {
+// 		TemplateID int `json:"template_id"`
+// 	}
+
+// 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+// 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	if campaignID == "" {
+// 		http.Error(w, "Missing campaign ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	err := service.SetTemplateService(campaignID, req.TemplateID)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	json.NewEncoder(w).Encode(pkg.Response{Message: "Template set successfully"})
+// }
+
+// Create campaign handler
+func CreateCampaignHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only POST method allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req pkg.CampaignCreateRequest
+	_ = json.NewDecoder(r.Body).Decode(&req)
+
+	response, err := service.CreateCampaign(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+// Send campaign handler new
+func SendCampaignHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	campaignID := mux.Vars(r)["id"]
+	if campaignID == "" {
+		http.Error(w, "Missing campaign ID", http.StatusBadRequest)
+		return
+	}
+
+	err := service.SendCampaignService(campaignID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Campaign sent successfully!"))
+}
+
 func SendCampaign(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -136,7 +208,7 @@ func SendCampaign(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Campaign sent successfully"))
 }
 
-//audience
+// audience
 func CreateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -168,7 +240,7 @@ func GetAudiencesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-//Get Audience by ID
+// Get Audience by ID
 func GetAudienceByIdHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -187,7 +259,7 @@ func GetAudienceByIdHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-//Update Audience
+// Update Audience
 func UpdateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -213,7 +285,7 @@ func UpdateAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-//Delete Audience
+// Delete Audience
 func DeleteAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -232,7 +304,7 @@ func DeleteAudienceHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(pkg.Response{Message: "Audience deleted successfully"})
 }
 
-//Create Member
+// Create Member
 func CreateMemberHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -258,7 +330,7 @@ func CreateMemberHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-//Get All Members of a List
+// Get All Members of a List
 func GetMembersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	listID := mux.Vars(r)["id"]
@@ -276,3 +348,52 @@ func GetMembersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+// Get Member by Email
+func GetMemberByEmailHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	listID := mux.Vars(r)["id"]
+	email := mux.Vars(r)["email"]
+
+	data, err := service.GetMemberByEmailService(listID, email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
+}
+
+// Update Member by Email
+func UpdateMemberHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	listID := mux.Vars(r)["id"]
+	email := mux.Vars(r)["email"]
+
+	var req pkg.MemberRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	data, err := service.UpdateMemberService(listID, email, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
+}
+
+// Delete Member by Email
+func DeleteMemberHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	listID := mux.Vars(r)["id"]
+	email := mux.Vars(r)["email"]
+
+	if err := service.DeleteMemberService(listID, email); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
