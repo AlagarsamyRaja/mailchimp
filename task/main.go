@@ -16,8 +16,7 @@ func main() {
 	r.HandleFunc("/getcampaignbyid/{id}", handlers.GetCampaignById).Methods("GET")
 	r.HandleFunc("/updatecampaign/{id}", handlers.UpdateCampaignHandler).Methods("PATCH")
 	r.HandleFunc("/deletecampaignbyid/{id}", handlers.DeleteCampaignHandler).Methods("DELETE")
-	//r.HandleFunc("/setcampaign/{id}", handlers.SetTemplateHandler).Methods("PUT")
-	r.HandleFunc("/sendcampaign/{id}", handlers.SendCampaignHandler).Methods("POST")
+	r.HandleFunc("/sendcampaign/{id}", handlers.SendCampaign).Methods("POST")
 
 	r.HandleFunc("/createaudience", handlers.CreateAudienceHandler).Methods("POST")
 	r.HandleFunc("/getaudience", handlers.GetAudiencesHandler).Methods("GET")

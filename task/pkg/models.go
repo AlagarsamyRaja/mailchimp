@@ -23,12 +23,6 @@ type CampaignCreateRequest struct {
 	Settings   CampaignSettings   `json:"settings"`
 }
 
-type CampaignResponse struct {
-	ID     string `json:"id"`
-	Type   string `json:"type"`
-	Status any    `json:"status"`
-}
-
 type Response struct {
 	Message string `json:"message"`
 }

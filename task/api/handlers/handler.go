@@ -5,32 +5,32 @@ import (
 	"mailchimp/api/service"
 	"mailchimp/pkg"
 	"net/http"
-
+	
 	"github.com/gorilla/mux"
 )
 
-func CreateCampaignn(w http.ResponseWriter, r *http.Request) {
+// Create campaign handler
+func CreateCampaigns(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST method allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var campaignReq pkg.CampaignCreateRequest
-
-	err := json.NewDecoder(r.Body).Decode(&campaignReq)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&campaignReq); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	response, err := service.CreateCampaignService(campaignReq)
+	response, err := service.CreateCampaignServices(campaignReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	
+	w.Write(response)
 }
 
 func GetCampaign(w http.ResponseWriter, r *http.Request) {
@@ -114,82 +114,6 @@ func DeleteCampaignHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-//func SetTemplateHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-
-// 	vars := mux.Vars(r)
-// 	campaignID := vars["id"]
-
-// 	var req struct {
-// 		TemplateID int `json:"template_id"`
-// 	}
-
-// 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-// 		http.Error(w, "Invalid request body", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	if campaignID == "" {
-// 		http.Error(w, "Missing campaign ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	err := service.SetTemplateService(campaignID, req.TemplateID)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	json.NewEncoder(w).Encode(pkg.Response{Message: "Template set successfully"})
-// }
-
-// Create campaign handler
-func CreateCampaigns(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST method allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var campaignReq pkg.CampaignCreateRequest
-	if err := json.NewDecoder(r.Body).Decode(&campaignReq); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-
-	response, err := service.CreateCampaignServices(campaignReq)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	// Directly send raw JSON response
-	w.Write(response)
-}
-
-// Send campaign handler new
-func SendCampaignHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	campaignID := mux.Vars(r)["id"]
-	if campaignID == "" {
-		http.Error(w, "Missing campaign ID", http.StatusBadRequest)
-		return
-	}
-
-	err := service.SendCampaignService(campaignID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Campaign sent successfully!"))
-}
-
 func SendCampaign(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -211,6 +135,7 @@ func SendCampaign(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Campaign sent successfully"))
 }
+
 
 // audience
 func CreateAudienceHandler(w http.ResponseWriter, r *http.Request) {

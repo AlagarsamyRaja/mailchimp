@@ -4,48 +4,10 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
-	"mailchimp/pkg"
 	"net/http"
 )
-
-func PostCampaign(url string, jsonData []byte, apikey string) (*pkg.CampaignResponse, error) {
-	httpReq, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.SetBasicAuth("anystring", apikey)
-
-	resp, err := http.DefaultClient.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println("Response Status:", resp.Status)
-	fmt.Println("Response Body:", string(body))
-
-	var campaignResp pkg.CampaignResponse
-	err = json.Unmarshal(body, &campaignResp)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("Mailchimp error: %s\nResponse: %s", resp.Status, string(body))
-	}
-
-	return &campaignResp, nil
-}
 
 func Post(url string, data []byte, apikey string) ([]byte, error) {
 	httpReq, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
